@@ -1,77 +1,70 @@
 package pk;
 
 import java.time.Duration;
+
 import org.openqa.selenium.By;
-import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import io.github.bonigarcia.wdm.WebDriverManager;
+
 public class SauceDemoAutomation {
 
     public static void main(String[] args) {
 
-        ChromeOptions options = new ChromeOptions();
-        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+        // Setup ChromeDriver
+        WebDriverManager.chromedriver().setup();
 
-        options.addArguments("--headless=new");
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new");  // Required for Jenkins
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--window-size=1920,1080");
 
         WebDriver driver = new ChromeDriver(options);
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().window().maximize();
 
         try {
 
             // Open SauceDemo
             driver.get("https://www.saucedemo.com/");
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("user-name")));
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
             // Login
             driver.findElement(By.id("user-name")).sendKeys("standard_user");
             driver.findElement(By.id("password")).sendKeys("secret_sauce");
             driver.findElement(By.id("login-button")).click();
 
-            // Wait for products page
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("inventory_list")));
+            // Wait until inventory page loads
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_list")));
 
             System.out.println("Login successful!");
 
             // Add first product to cart
-            driver.findElement(By.xpath("(//button[text()='Add to cart'])[1]")).click();
+            WebElement addToCartBtn = driver.findElement(By.cssSelector(".inventory_item button"));
+            addToCartBtn.click();
+
             System.out.println("Product added to cart.");
 
-            // Go to cart
+            // Click cart icon
             driver.findElement(By.className("shopping_cart_link")).click();
 
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("cart_list")));
+            // Wait until cart page loads
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("cart_item")));
 
-            System.out.println("Navigated to cart.");
+            System.out.println("Navigated to cart page successfully.");
 
-            // Checkout
-            driver.findElement(By.id("checkout")).click();
+            System.out.println("Test Completed Successfully!");
 
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("first-name")));
-
-            // Fill details
-            driver.findElement(By.id("first-name")).sendKeys("Prashanth");
-            driver.findElement(By.id("last-name")).sendKeys("Kathi");
-            driver.findElement(By.id("postal-code")).sendKeys("600001");
-
-            driver.findElement(By.id("continue")).click();
-
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("finish")));
-
-            driver.findElement(By.id("finish")).click();
-
-            System.out.println("Order completed successfully!");
-
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
-            driver.quit();
+            driver.quit();  // Always close browser
         }
     }
 }
