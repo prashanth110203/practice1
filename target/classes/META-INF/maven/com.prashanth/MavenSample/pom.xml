@@ -36,7 +36,7 @@
             <artifactId>exec-maven-plugin</artifactId>
             <version>3.1.0</version>
             <configuration>
-                <mainClass>pk.Amazon_auto</mainClass>
+                <mainClass>pk.SauceDemoAutomation</mainClass>
             </configuration>
         </plugin>
     </plugins>
