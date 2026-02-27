@@ -23,6 +23,7 @@ public class SauceDemoAutomation {
         options.addArguments("--headless=new");  // Required for Jenkins
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-allow-origins=*");
 
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
