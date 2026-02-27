@@ -1,10 +1,8 @@
 package pk;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.openqa.selenium.By;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -13,78 +11,67 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class SauceDemoAutomation {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
         ChromeOptions options = new ChromeOptions();
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
 
-        options.addArguments("--disable-notifications");
-        options.addArguments("--disable-infobars");
-        options.addArguments("--disable-save-password-bubble");
-        options.addArguments("--disable-password-generation");
-        options.addArguments("--disable-features=PasswordLeakDetection");
-        options.addArguments("--incognito");
-
-        Map<String, Object> prefs = new HashMap<>();
-        prefs.put("credentials_enable_service", false);
-        prefs.put("profile.password_manager_enabled", false);
-
-        options.setExperimentalOption("prefs", prefs);
+        options.addArguments("--headless=new");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
 
         WebDriver driver = new ChromeDriver(options);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
-        driver.manage().window().maximize();
+        try {
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            // Open SauceDemo
+            driver.get("https://www.saucedemo.com/");
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("user-name")));
 
-        driver.get("https://www.saucedemo.com/");
-        Thread.sleep(1500);
+            // Login
+            driver.findElement(By.id("user-name")).sendKeys("standard_user");
+            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+            driver.findElement(By.id("login-button")).click();
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("user-name")))
-                .sendKeys("standard_user");
-        Thread.sleep(1500);
+            // Wait for products page
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("inventory_list")));
 
-        driver.findElement(By.id("password"))
-                .sendKeys("secret_sauce");
-        Thread.sleep(1500);
+            System.out.println("Login successful!");
 
-        driver.findElement(By.id("login-button")).click();
-        Thread.sleep(2000);
+            // Add first product to cart
+            driver.findElement(By.xpath("(//button[text()='Add to cart'])[1]")).click();
+            System.out.println("Product added to cart.");
 
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("add-to-cart-sauce-labs-backpack"))).click();
-        Thread.sleep(1500);
+            // Go to cart
+            driver.findElement(By.className("shopping_cart_link")).click();
 
-        // Add second product
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("add-to-cart-sauce-labs-bike-light"))).click();
-        Thread.sleep(1500);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("cart_list")));
 
-        driver.findElement(By.className("shopping_cart_link")).click();
-        Thread.sleep(2000);
+            System.out.println("Navigated to cart.");
 
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("checkout"))).click();
-        Thread.sleep(2000);
+            // Checkout
+            driver.findElement(By.id("checkout")).click();
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("first-name")))
-                .sendKeys("Prashanth");
-        Thread.sleep(1500);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("first-name")));
 
-        driver.findElement(By.id("last-name")).sendKeys("Kathi");
-        Thread.sleep(1500);
+            // Fill details
+            driver.findElement(By.id("first-name")).sendKeys("Prashanth");
+            driver.findElement(By.id("last-name")).sendKeys("Kathi");
+            driver.findElement(By.id("postal-code")).sendKeys("600001");
 
-        driver.findElement(By.id("postal-code")).sendKeys("600001");
-        Thread.sleep(1500);
+            driver.findElement(By.id("continue")).click();
 
-        driver.findElement(By.id("continue")).click();
-        Thread.sleep(2000);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("finish")));
 
-        driver.findElement(By.id("finish")).click();
-        Thread.sleep(2000);
+            driver.findElement(By.id("finish")).click();
 
-        System.out.println("Order placed successfully!");
+            System.out.println("Order completed successfully!");
 
-        driver.quit();
+        } finally {
+            driver.quit();
+        }
     }
 }
-
